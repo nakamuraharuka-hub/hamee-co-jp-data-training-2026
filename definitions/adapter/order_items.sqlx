@@ -1,0 +1,23 @@
+
+config {
+  type: "view",
+  schema: "kdec_adapter"
+}
+
+SELECT
+ id,
+ order_id,
+ user_id,
+ product_id,
+ inventory_item_id,
+ status,
+ datetime(created_at, 'Asia/Tokyo') as created_at,
+ date(created_at, 'Asia/Tokyo') as created_date,
+ datetime(shipped_at, 'Asia/Tokyo') as shipped_at,
+ date(shipped_at, 'Asia/Tokyo') as shipped_date,
+ datetime(delivered_at, 'Asia/Tokyo') as delivered_at,
+ date(delivered_at, 'Asia/Tokyo') as delivered_date,
+ datetime(returned_at, 'Asia/Tokyo') as returned_at,
+ date(returned_at, 'Asia/Tokyo') as returned_date,
+ sale_price
+FROM ${ref("kdec_raw", "order_items")}

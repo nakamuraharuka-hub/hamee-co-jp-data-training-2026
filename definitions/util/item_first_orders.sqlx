@@ -1,0 +1,27 @@
+config {
+  type: "view",
+  schema: "kdec_util"
+}
+
+WITH ranked_items AS (
+  SELECT
+    i.product_id,
+    i.order_id,
+    o.created_date,
+    ROW_NUMBER() OVER(PARTITION BY i.product_id ORDER BY o.created_at ASC, i.order_id ASC) as rn
+  FROM ${ref("kdec_adapter", "order_items")} i
+  LEFT JOIN ${ref("kdec_adapter", "orders")} o
+    ON i.order_id = o.order_id
+)
+
+SELECT
+  r.product_id,
+  r.order_id as first_order_id,
+  true as is_item_first_order,
+  c.`年月` as item_first_order_year_month,
+  c.`年_週` as item_first_order_year_week,
+  r.created_date as item_first_order_day
+FROM ranked_items r
+LEFT JOIN ${ref("calendar")} c
+  ON r.created_date = c.`日付`
+WHERE r.rn = 1

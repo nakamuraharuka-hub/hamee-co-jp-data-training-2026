@@ -1,0 +1,6 @@
+config {
+    type: "declaration",
+    database: "ne-training26-nakamura",
+    schema: "kdec_raw",
+    name: "products"
+}

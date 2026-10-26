@@ -1,0 +1,20 @@
+config {
+  type: "view",
+  schema: "kdec_util"
+}
+
+SELECT
+ order_id,
+ c.`年月` as order_year_month,
+ c.`年_週` as order_year_week,
+ created_date as order_day,
+ o.created_at is not null as is_ordered,
+ o.shipped_at is not null as is_shipped,
+ o.delivered_at is not null as is_delivered,
+ o.returned_at is not null as is_returned,
+ date_diff(shipped_date, created_date, day) as shipped_day_after_order,
+ date_diff(delivered_date, created_date, day) as delivered_day_after_order,
+ date_diff(returned_date, created_date, day) as returned_day_after_order
+FROM ${ref("kdec_adapter", "orders")} o
+left join ${ref("calendar")} c
+on o.created_date = c.`日付`

@@ -1,0 +1,29 @@
+config {
+  type: "view",
+  schema: "kdec_util"
+}
+
+with ranked_items AS (
+  SELECT DISTINCT
+    i.product_id,
+    i.order_id,
+    o.created_date,
+    DENSE_RANK() OVER(PARTITION BY i.product_id ORDER BY o.created_at ASC) as item_order_count
+  FROM ${ref("kdec_adapter", "order_items")} i
+  left join ${ref("kdec_adapter", "orders")} o
+    on i.order_id = o.order_id
+)
+
+SELECT
+ r.product_id,
+ r.order_id,
+ c.`年月` as order_year_month,
+ r.item_order_count,
+ date_diff(r.created_date, f.item_first_order_day, month) as item_order_cohort_month,
+ date_diff(r.created_date, f.item_first_order_day, isoweek) as item_order_cohort_week,
+ date_diff(r.created_date, f.item_first_order_day, day) as item_order_cohort_day
+FROM ranked_items r
+left join ${ref("calendar")} c
+  ON r.created_date = c.`日付`
+left join ${ref("kdec_util", "item_first_orders")} f
+  on r.product_id = f.product_id

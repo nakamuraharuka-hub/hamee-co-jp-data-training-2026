@@ -1,0 +1,22 @@
+
+config {
+  type: "view",
+  schema: "kdec_adapter"
+}
+
+SELECT
+ id,
+ product_id,
+ datetime(created_at, 'Asia/Tokyo') as created_at,
+ date(created_at, 'Asia/Tokyo') as created_date,
+ datetime(sold_at, 'Asia/Tokyo') as sold_at,
+ date(sold_at, 'Asia/Tokyo') as sold_date,
+ cost,
+ product_category,
+ product_name,
+ product_brand,
+ product_retail_price,
+ product_department,
+ product_sku,
+ product_distribution_center_id
+FROM ${ref("kdec_raw", "inventory_items")}

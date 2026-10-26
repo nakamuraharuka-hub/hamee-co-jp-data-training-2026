@@ -1,0 +1,14 @@
+config {
+  type: "view",
+  schema: "kdec_util"
+}
+
+SELECT
+ s.product_id,
+ max(if(s.item_order_count = 1, o.created_date, null)) as item_f1_day,
+ max(if(s.item_order_count = 2, o.created_date, null)) as item_f2_day,
+ max(if(s.item_order_count = 3, o.created_date, null)) as item_f3_day
+FROM ${ref("kdec_util", "item_order_stats")} s
+left join ${ref("kdec_adapter", "orders")} o
+  on s.order_id = o.order_id
+group by s.product_id

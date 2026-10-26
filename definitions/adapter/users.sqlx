@@ -1,0 +1,23 @@
+config {
+  type: "view",
+  schema: "kdec_adapter"
+}
+
+SELECT
+ id,
+ sha256(first_name) as first_name_hashed,
+ sha256(last_name) as last_name_hashed,
+ sha256(email) as email_hashed,
+ age,
+ gender,
+ state,
+ sha256(street_address) as street_address_hashed,
+ sha256(postal_code) as postal_code_hashed,
+ city,
+ country,
+ sha256(cast(latitude as string)) as latitude_hashed,
+ sha256(cast(longitude as string)) as longitude_hashed,
+ traffic_source,
+ datetime(created_at, 'Asia/Tokyo') as created_at,
+ date(created_at, 'Asia/Tokyo') as created_date
+FROM ${ref("kdec_raw", "users")}

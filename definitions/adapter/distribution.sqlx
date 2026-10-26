@@ -1,0 +1,9 @@
+config {
+  type: "view",
+  schema: "kdec_adapter",
+  name: "distribution_centers"
+}
+
+SELECT
+ *
+FROM ${ref("kdec_raw", "distribution_centers")}

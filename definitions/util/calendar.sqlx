@@ -1,0 +1,71 @@
+config {
+  type: "view",
+  schema: "kdec_util"
+}
+
+WITH date_series AS (
+  -- カレンダーの開始日と終了日を指定
+  SELECT d AS date_col
+  FROM UNNEST(GENERATE_DATE_ARRAY('2019-01-01', '2024-12-31')) AS d
+),
+base_calendar AS (
+  SELECT
+    date_col AS date_val,
+    -- 月曜=1, 火曜=2 ... 日曜=7 （月曜始まりに変換）
+    CASE EXTRACT(DAYOFWEEK FROM date_col)
+      WHEN 1 THEN 7
+      ELSE EXTRACT(DAYOFWEEK FROM date_col) - 1
+    END AS iso_dow_num
+  FROM
+    date_series
+)
+SELECT
+  date_val AS `日付`,
+
+  -- 曜日（数字_日本語）例: 1_月曜日 (月曜を1としています)
+  CASE iso_dow_num
+    WHEN 1 THEN '1_月曜日' WHEN 2 THEN '2_火曜日' WHEN 3 THEN '3_水曜日'
+    WHEN 4 THEN '4_木曜日' WHEN 5 THEN '5_金曜日' WHEN 6 THEN '6_土曜日' WHEN 7 THEN '7_日曜日'
+  END AS `曜日_数字_日本語`,
+
+  -- 曜日（日本語）
+  CASE iso_dow_num
+    WHEN 1 THEN '月曜日' WHEN 2 THEN '火曜日' WHEN 3 THEN '水曜日'
+    WHEN 4 THEN '木曜日' WHEN 5 THEN '金曜日' WHEN 6 THEN '土曜日' WHEN 7 THEN '日曜日'
+  END AS `曜日_日本語`,
+
+  -- 曜日（数字）月曜=1 ～ 日曜=7
+  iso_dow_num AS `曜日_数字`,
+
+  -- 曜日（英語）
+  FORMAT_DATE('%A', date_val) AS `曜日_英語`,
+
+  -- 平日休日判定
+   CASE
+    WHEN iso_dow_num IN (6, 7) THEN '休日'
+    WHEN bqfunc.holidays_in_japan__asia_northeast1.holiday_name(date_val) IS NOT NULL THEN '休日'
+    ELSE '平日'
+  END AS `平日休日`,
+
+  -- 年_週（その年の何週目か？）例: 2024_W01 (月曜始まりのISO週番号)
+FORMAT_DATE('%G_W%V', date_val) AS `年_週`,
+
+  -- 年月 例: 2024-01
+  FORMAT_DATE('%Y-%m', date_val) AS `年月`,
+
+  -- 年_四半期 例: 2024_Q1
+  FORMAT_DATE('%Y_Q%Q', date_val) AS `年_四半期`,
+
+  -- 月（年なし）
+  EXTRACT(MONTH FROM date_val) AS `月`,
+
+  -- 四半期（年なし）
+  EXTRACT(QUARTER FROM date_val) AS `四半期`,
+
+  -- 年
+  EXTRACT(YEAR FROM date_val) AS `年`
+
+FROM
+  base_calendar
+ORDER BY
+  date_val

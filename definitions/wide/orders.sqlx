@@ -140,3 +140,4 @@ left join ${ref("kdec_util", "item_first_orders")} itf on i.product_id = itf.pro
 left join ${ref("kdec_util", "item_order_stats")} its on i.product_id = its.product_id and i.order_id = its.order_id
 left join ${ref("kdec_util", "item_funnel")} itfn on i.product_id = itfn.product_id
 left join ${ref("kdec_util", "item_percentile_stats")} ip on i.product_id = ip.product_id and f.order_year_month = ip.order_year_month
+-- review test

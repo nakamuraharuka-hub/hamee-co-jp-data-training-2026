@@ -1,0 +1,142 @@
+config {
+  type: "view",
+  schema: "kdec_wide"
+}
+
+SELECT
+ o.order_id,
+ o.user_id,
+ o.status as order_status,
+ o.created_at as order_created_at,
+ o.created_date as order_created_date,
+ o.shipped_at as order_shipped_at,
+ o.shipped_date as order_shipped_date,
+ o.delivered_at as order_delivered_at,
+ o.delivered_date as order_delivered_date,
+ o.returned_at as order_returned_at,
+ o.returned_date as order_returned_date,
+
+ i.id as order_item_id,
+ i.sale_price,
+
+ i.inventory_item_id,
+ ii.created_at as inventory_created_at,
+ ii.created_date as inventory_created_date,
+ ii.sold_at as inventory_sold_at,
+ ii.sold_date as inventory_sold_date,
+
+ i.product_id,
+ p.cost as product_cost,
+ p.category as product_category,
+ p.name as product_name,
+ p.brand as product_brand,
+ p.retail_price as product_retail_price,
+ p.department as product_department,
+ p.sku as product_sku,
+
+ p.distribution_center_id,
+ d.name as distribution_center_name,
+ d.latitude as distribution_center_latitude,
+ d.longitude as distribution_center_longitude,
+
+ u.first_name_hashed,
+ u.last_name_hashed,
+ u.email_hashed,
+ u.age as user_age,
+ a.age_group as user_age_group,
+ u.gender as user_gender,
+ u.state as user_state,
+ u.street_address_hashed,
+ u.postal_code_hashed,
+ u.city as user_city,
+ u.country as user_country,
+ u.latitude_hashed as user_latitude_hashed,
+ u.longitude_hashed as user_longitude_hashed,
+ u.traffic_source as user_traffic_source,
+ u.created_at as user_created_at,
+ u.created_date as user_created_date,
+
+ c.`曜日_数字_日本語`,
+ c.`曜日_日本語`,
+ c.`曜日_数字`,
+ c.`曜日_英語`,
+ c.`平日休日`,
+ c.`年_四半期`,
+ c.`月`,
+ c.`四半期`,
+ c.`年`,
+
+ f.order_year_month,
+ f.order_year_week,
+ f.is_ordered,
+ f.is_shipped,
+ f.is_delivered,
+ f.is_returned,
+ f.shipped_day_after_order,
+ f.delivered_day_after_order,
+ f.returned_day_after_order,
+
+ uf.first_order_id as user_first_order_id,
+ o.order_id = uf.first_order_id as is_user_first_order,
+ uf.user_first_order_year_month,
+ uf.user_first_order_year_week,
+ uf.user_first_order_day,
+
+ us.user_order_count,
+ us.user_order_cohort_month,
+ us.user_order_cohort_week,
+ us.user_order_cohort_day,
+
+ ufn.user_f1_item_name,
+ ufn.user_f1_item_price,
+ ufn.user_f1_day,
+ ufn.user_f2_item_name,
+ ufn.user_f2_item_price,
+ ufn.user_f2_day,
+ ufn.user_f3_item_name,
+ ufn.user_f3_item_price,
+ ufn.user_f3_day,
+
+ up.user_percentile_total_rank,
+ up.user_percentile_total_base,
+ up.user_percentile_month_rank,
+ up.user_percentile_month_base,
+
+ itf.first_order_id as item_first_order_id,
+ i.order_id = itf.first_order_id as is_item_first_order,
+ itf.item_first_order_year_month,
+ itf.item_first_order_year_week,
+ itf.item_first_order_day,
+
+ its.item_order_count,
+ its.item_order_cohort_month,
+ its.item_order_cohort_week,
+ its.item_order_cohort_day,
+
+ itfn.item_f1_day,
+ itfn.item_f2_day,
+ itfn.item_f3_day,
+
+ ip.item_percentile_total_rank,
+ ip.item_percentile_total_base,
+ ip.item_percentile_month_rank,
+ ip.item_percentile_month_base
+
+
+FROM ${ref("kdec_adapter", "orders")} o
+left join ${ref("kdec_adapter", "order_items")} i on o.order_id = i.order_id
+left join ${ref("kdec_adapter", "inventory_items")} ii on i.inventory_item_id = ii.id
+left join ${ref("kdec_adapter", "products")} p on i.product_id = p.id
+left join ${ref("kdec_adapter", "distribution_centers")} d on p.distribution_center_id = d.id
+left join ${ref("kdec_adapter", "users")} u on o.user_id = u.id
+left join ${ref("calendar")} c on o.created_date = c.`日付`
+left join ${ref("kdec_util", "user_age_groups")} a on o.user_id = a.user_id
+left join ${ref("kdec_util", "order_funnel")} f on o.order_id = f.order_id
+left join ${ref("kdec_util", "user_first_orders")} uf on o.user_id = uf.user_id
+left join ${ref("kdec_util", "user_order_stats")} us on o.order_id = us.order_id
+left join ${ref("kdec_util", "user_funnel")} ufn on o.user_id = ufn.user_id
+left join ${ref("kdec_util", "user_percentile_stats")} up on o.user_id = up.user_id and f.order_year_month = up.order_year_month
+left join ${ref("kdec_util", "item_first_orders")} itf on i.product_id = itf.product_id
+left join ${ref("kdec_util", "item_order_stats")} its on i.product_id = its.product_id and i.order_id = its.order_id
+left join ${ref("kdec_util", "item_funnel")} itfn on i.product_id = itfn.product_id
+left join ${ref("kdec_util", "item_percentile_stats")} ip on i.product_id = ip.product_id and f.order_year_month = ip.order_year_month

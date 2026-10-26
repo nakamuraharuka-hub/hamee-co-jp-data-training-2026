@@ -1,0 +1,25 @@
+config {
+  type: "view",
+  schema: "kdec_util"
+}
+
+WITH ranked_orders AS (
+  SELECT
+    user_id,
+    order_id,
+    created_date,
+    ROW_NUMBER() OVER(PARTITION BY user_id ORDER BY created_at ASC, order_id ASC) as rn
+  FROM ${ref("kdec_adapter", "orders")}
+)
+
+SELECT
+  r.user_id,
+  r.order_id as first_order_id,
+  true as is_user_first_order,
+  c.`年月` as user_first_order_year_month,
+  c.`年_週` as user_first_order_year_week,
+  r.created_date as user_first_order_day
+FROM ranked_orders r
+LEFT JOIN ${ref("calendar")} c
+  ON r.created_date = c.`日付`
+WHERE r.rn = 1 -- ここで1番目（初回）の注文だけを絞り込む

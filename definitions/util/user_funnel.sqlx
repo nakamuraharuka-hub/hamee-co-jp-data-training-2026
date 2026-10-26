@@ -1,0 +1,36 @@
+config {
+  type: "view",
+  schema: "kdec_util"
+}
+
+with base as (
+  select
+   u.user_id,
+   u.user_order_count,
+   string_agg(p.name, "、" order by p.name) as item_name,  
+   sum(i.sale_price) as item_price,                        
+   min(o.created_date) as order_day
+  from ${ref("kdec_util", "user_order_stats")} u
+  left join ${ref("kdec_adapter", "orders")} o
+    on u.order_id = o.order_id
+  left join ${ref("kdec_adapter", "order_items")} i
+    on u.order_id = i.order_id
+  left join ${ref("kdec_adapter", "products")} p
+    on i.product_id = p.id
+  where u.user_order_count <= 3
+  group by u.user_id, u.user_order_count
+)
+
+SELECT
+ user_id,
+ max(if(user_order_count = 1, item_name, null)) as user_f1_item_name,
+ max(if(user_order_count = 1, item_price, null)) as user_f1_item_price,
+ max(if(user_order_count = 1, order_day, null)) as user_f1_day,
+ max(if(user_order_count = 2, item_name, null)) as user_f2_item_name,
+ max(if(user_order_count = 2, item_price, null)) as user_f2_item_price,
+ max(if(user_order_count = 2, order_day, null)) as user_f2_day,
+ max(if(user_order_count = 3, item_name, null)) as user_f3_item_name,
+ max(if(user_order_count = 3, item_price, null)) as user_f3_item_price,
+ max(if(user_order_count = 3, order_day, null)) as user_f3_day
+FROM base
+group by user_id

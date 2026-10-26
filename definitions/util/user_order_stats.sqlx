@@ -1,0 +1,27 @@
+config {
+  type: "view",
+  schema: "kdec_util"
+}
+
+with ranked_orders AS (
+  SELECT
+    user_id,
+    order_id,
+    created_date,
+    DENSE_RANK() OVER(PARTITION BY user_id ORDER BY created_at ASC) as user_order_count
+  FROM ${ref("kdec_adapter", "orders")}
+)
+
+SELECT
+ r.user_id,
+ r.order_id,
+ c.`年月` as order_year_month,
+ r.user_order_count,
+ date_diff(r.created_date, u.user_first_order_day, month) as user_order_cohort_month, -- 初回購入年月から何ヶ月経過しているか
+ date_diff(r.created_date, u.user_first_order_day, isoweek) as user_order_cohort_week, -- 初回購入年週から何週経過しているか
+ date_diff(r.created_date, u.user_first_order_day, day) as user_order_cohort_day -- 初回購入日から何日経過しているか
+FROM ranked_orders r
+left join ${ref("calendar")} c
+  ON r.created_date = c.`日付`
+left join ${ref("kdec_util", "user_first_orders")} u
+  on r.user_id = u.user_id

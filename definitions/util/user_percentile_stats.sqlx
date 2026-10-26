@@ -1,0 +1,45 @@
+config {
+  type: "view",
+  schema: "kdec_util"
+}
+
+with sales as (
+  select
+   u.user_id,
+   u.order_year_month,
+   sum(i.sale_price) as month_sales
+  from ${ref("kdec_util", "user_order_stats")} u
+  left join ${ref("kdec_adapter", "order_items")} i
+    on u.order_id = i.order_id
+  group by u.user_id, u.order_year_month
+),
+
+total as (
+  select
+   user_id,
+   sum(month_sales) as total_sales,
+   ntile(10) over(order by sum(month_sales) desc) * 10 as total_rank
+  from sales
+  group by user_id
+),
+
+month as (
+  select
+   user_id,
+   order_year_month,
+   month_sales,
+   ntile(10) over(partition by order_year_month order by month_sales desc) * 10 as month_rank
+  from sales
+)
+
+SELECT
+ m.user_id,
+ m.order_year_month,
+ t.total_rank as user_percentile_total_rank,
+ min(t.total_sales) over(partition by t.total_rank) as user_percentile_total_base,
+ m.month_rank as user_percentile_month_rank,
+ min(m.month_sales) over(partition by m.order_year_month, m.month_rank) as user_percentile_month_base
+FROM month m
+left join total t
+  on m.user_id = t.user_id
+

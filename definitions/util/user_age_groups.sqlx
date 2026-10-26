@@ -1,0 +1,9 @@
+config {
+  type: "view",
+  schema: "kdec_util"
+}
+
+SELECT
+ id as user_id,
+concat(cast(div(age, 10) * 10 as string), '代') as age_group
+FROM ${ref("kdec_adapter", "users")}

@@ -1,6 +1,6 @@
 config {
     type: "declaration",
     database: "ne-training26-nakamura",
-    schema: "dataform",
-    name: "raw_users"
+    schema: "kdec_raw",
+    name: "users"
 }
